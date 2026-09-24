@@ -7,6 +7,14 @@ class HashMapInterface[K, V](ABC):
   def __init__(self) -> None:
     self._map: dict[K, V] = {}
 
+  def _assert_key_not_none(self, key: K):
+    if key is None:
+      raise KeyError("Key cannot be None.")
+
+  def _assert_value_not_none(self, value: V):
+    if value is None:
+      raise ValueError("Value cannot be None.")
+
   # ==================================================
   # FACTORIES
   # ==================================================
@@ -342,6 +350,9 @@ class HashMapInterface[K, V](ABC):
     Args:
       key: The key whose presence should be checked.
 
+    Raises:
+      KeyError: if provided key is None.
+
     Returns:
       ``True`` if the key exists in the HashMap, otherwise ``False``.
 
@@ -368,6 +379,9 @@ class HashMapInterface[K, V](ABC):
 
     Args:
       value: The value whose presence should be checked.
+
+    Raises:
+      ValueError: if the given value is None.
 
     Returns:
       ``True`` if at least one stored entry has a value equal to
@@ -397,6 +411,10 @@ class HashMapInterface[K, V](ABC):
     Args:
       key: The key to look up.
       value: The value expected to be associated with the key.
+
+    Raises:
+      KeyError: if the given key is None.
+      ValueError: if the given value is None.
 
     Returns:
       ``True`` if the specified key-value pair exists, otherwise

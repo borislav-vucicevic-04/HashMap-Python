@@ -3,6 +3,7 @@ from .__mixins__ import *
 
 class HashMap[K, V](
   Factories[K, V],
+  Lookup[K, V],
   HashMapInterface[K, V]
 ): 
   def __init__(self) -> None:
