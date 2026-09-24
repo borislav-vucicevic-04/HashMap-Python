@@ -5,7 +5,7 @@ from ..__types__ import *
 
 class HashMapInterface[K, V](ABC):
   def __init__(self) -> None:
-    self.__map: dict[K, V] = {}
+    self._map: dict[K, V] = {}
 
   # ==================================================
   # FACTORIES
