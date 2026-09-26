@@ -1,17 +1,26 @@
-from collections.abc import ItemsView, KeysView, ValuesView
+from collections.abc import Iterator
 from ..__types__ import Rule
 
 from .interface import HashMapInterface
 
 class Lookup[K, V](HashMapInterface[K, V]):
-  def get_keys(self) -> KeysView[K]:
-    return self._map.keys()  
+  def get_keys(self, reverse: bool = False) -> Iterator[K]:
+    if not reverse:
+      return iter(self._map.keys())
+    else:
+      return reversed(self._map.keys())
 
-  def get_values(self) -> ValuesView[V]:
-    return self._map.values()  
+  def get_values(self, reverse: bool = False) -> Iterator[V]:
+    if not reverse:
+      return iter(self._map.values())
+    else:
+      return reversed(self._map.values())
 
-  def get_entries(self) -> ItemsView[K, V]:
-    return self._map.items()  
+  def get_entries(self, reverse: bool = False) -> Iterator[tuple[K, V]]:
+    if not reverse:
+      return iter(self._map.items())
+    else:
+      return reversed(self._map.items())
 
   def size(self) -> int:
     return len(self._map)  

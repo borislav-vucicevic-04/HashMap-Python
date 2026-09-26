@@ -1,4 +1,4 @@
-from collections.abc import ItemsView, KeysView, ValuesView
+from collections.abc import Iterator
 
 import pytest
 
@@ -78,14 +78,14 @@ def mutable_hashmap() -> HashMap[str, list[int]]:
 
 class TestGetKeys:
 
-  def test_returns_keys_view(
+  def test_returns_iterator(
     self,
     hashmap: HashMap[str, int],
   ) -> None:
-    assert isinstance(
-      hashmap.get_keys(),
-      KeysView,
-    )
+    keys = hashmap.get_keys()
+
+    assert isinstance(keys, Iterator)
+    assert iter(keys) is keys
 
 
   def test_contains_all_keys_in_order(
@@ -99,27 +99,38 @@ class TestGetKeys:
     ]
 
 
-  def test_empty_hashmap_returns_empty_view(
+  def test_reverse_returns_keys_in_reverse_order(
+    self,
+    hashmap: HashMap[str, int],
+  ) -> None:
+    assert list(hashmap.get_keys(reverse=True)) == [
+      "c",
+      "b",
+      "a",
+    ]
+
+
+  @pytest.mark.parametrize("reverse", [False, True])
+  def test_empty_hashmap_returns_empty_iterator(
     self,
     empty_hashmap: HashMap[str, int],
+    reverse: bool,
   ) -> None:
-    assert list(empty_hashmap.get_keys()) == []
+    assert list(empty_hashmap.get_keys(reverse=reverse)) == []
 
 
-  def test_returns_live_view(
+  def test_iterator_is_single_use(
     self,
     hashmap: HashMap[str, int],
   ) -> None:
     keys = hashmap.get_keys()
 
-    hashmap._map["d"] = 40 # type: ignore
-
+    assert next(keys) == "a"
     assert list(keys) == [
-      "a",
       "b",
       "c",
-      "d",
     ]
+    assert list(keys) == []
 
 
 # ==================================================
@@ -128,14 +139,14 @@ class TestGetKeys:
 
 class TestGetValues:
 
-  def test_returns_values_view(
+  def test_returns_iterator(
     self,
     hashmap: HashMap[str, int],
   ) -> None:
-    assert isinstance(
-      hashmap.get_values(),
-      ValuesView,
-    )
+    values = hashmap.get_values()
+
+    assert isinstance(values, Iterator)
+    assert iter(values) is values
 
 
   def test_contains_all_values_in_order(
@@ -149,27 +160,38 @@ class TestGetValues:
     ]
 
 
-  def test_empty_hashmap_returns_empty_view(
+  def test_reverse_returns_values_in_reverse_order(
+    self,
+    hashmap: HashMap[str, int],
+  ) -> None:
+    assert list(hashmap.get_values(reverse=True)) == [
+      30,
+      20,
+      10,
+    ]
+
+
+  @pytest.mark.parametrize("reverse", [False, True])
+  def test_empty_hashmap_returns_empty_iterator(
     self,
     empty_hashmap: HashMap[str, int],
+    reverse: bool,
   ) -> None:
-    assert list(empty_hashmap.get_values()) == []
+    assert list(empty_hashmap.get_values(reverse=reverse)) == []
 
 
-  def test_returns_live_view(
+  def test_iterator_is_single_use(
     self,
     hashmap: HashMap[str, int],
   ) -> None:
     values = hashmap.get_values()
 
-    hashmap._map["d"] = 40 # type: ignore
-
+    assert next(values) == 10
     assert list(values) == [
-      10,
       20,
       30,
-      40,
     ]
+    assert list(values) == []
 
 
   def test_mutable_values_are_returned_by_reference(
@@ -177,7 +199,7 @@ class TestGetValues:
     mutable_hashmap: HashMap[str, list[int]],
   ) -> None:
     values = mutable_hashmap.get_values()
-    first = next(iter(values))
+    first = next(values)
 
     first.append(100)
 
@@ -188,20 +210,36 @@ class TestGetValues:
     ]
 
 
+  def test_reverse_mutable_values_are_returned_by_reference(
+    self,
+    mutable_hashmap: HashMap[str, list[int]],
+  ) -> None:
+    values = mutable_hashmap.get_values(reverse=True)
+    last = next(values)
+
+    last.append(100)
+
+    assert mutable_hashmap.get("b") == [
+      3,
+      4,
+      100,
+    ]
+
+
 # ==================================================
 # GET ENTRIES
 # ==================================================
 
 class TestGetEntries:
 
-  def test_returns_items_view(
+  def test_returns_iterator(
     self,
     hashmap: HashMap[str, int],
   ) -> None:
-    assert isinstance(
-      hashmap.get_entries(),
-      ItemsView,
-    )
+    entries = hashmap.get_entries()
+
+    assert isinstance(entries, Iterator)
+    assert iter(entries) is entries
 
 
   def test_contains_all_entries_in_order(
@@ -215,42 +253,69 @@ class TestGetEntries:
     ]
 
 
-  def test_empty_hashmap_returns_empty_view(
+  def test_reverse_returns_entries_in_reverse_order(
+    self,
+    hashmap: HashMap[str, int],
+  ) -> None:
+    assert list(hashmap.get_entries(reverse=True)) == [
+      ("c", 30),
+      ("b", 20),
+      ("a", 10),
+    ]
+
+
+  @pytest.mark.parametrize("reverse", [False, True])
+  def test_empty_hashmap_returns_empty_iterator(
     self,
     empty_hashmap: HashMap[str, int],
+    reverse: bool,
   ) -> None:
-    assert list(empty_hashmap.get_entries()) == []
+    assert list(empty_hashmap.get_entries(reverse=reverse)) == []
 
 
-  def test_returns_live_view(
+  def test_iterator_is_single_use(
     self,
     hashmap: HashMap[str, int],
   ) -> None:
     entries = hashmap.get_entries()
 
-    hashmap._map["d"] = 40 # type: ignore
-
+    assert next(entries) == ("a", 10)
     assert list(entries) == [
-      ("a", 10),
       ("b", 20),
       ("c", 30),
-      ("d", 40),
     ]
+    assert list(entries) == []
 
 
   def test_mutable_values_are_returned_by_reference(
     self,
     mutable_hashmap: HashMap[str, list[int]],
   ) -> None:
-    _, value = next(
-      iter(mutable_hashmap.get_entries())
-    )
+    _, value = next(mutable_hashmap.get_entries())
 
     value.append(100)
 
     assert mutable_hashmap.get("a") == [
       1,
       2,
+      100,
+    ]
+
+
+  def test_reverse_mutable_values_are_returned_by_reference(
+    self,
+    mutable_hashmap: HashMap[str, list[int]],
+  ) -> None:
+    key, value = next(
+      mutable_hashmap.get_entries(reverse=True)
+    )
+
+    value.append(100)
+
+    assert key == "b"
+    assert mutable_hashmap.get("b") == [
+      3,
+      4,
       100,
     ]
 

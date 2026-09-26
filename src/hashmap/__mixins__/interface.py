@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import ItemsView, KeysView, ValuesView
+from collections.abc import Iterator
 from typing import Self
 from ..__types__ import *
 
@@ -14,6 +14,10 @@ class HashMapInterface[K, V](ABC):
   def _assert_value_not_none(self, value: V):
     if value is None:
       raise ValueError("Value cannot be None.")
+
+  def _assert_key_exists(self, key: K):
+    if key not in self._map:
+      raise KeyError(f"The given key doesn't exist. \n\tSupplied key: {key}")
 
   # ==================================================
   # FACTORIES
@@ -129,131 +133,155 @@ class HashMapInterface[K, V](ABC):
   # ==================================================
 
   @abstractmethod
-  def get_keys(self) -> KeysView[K]:
+  def get_keys(self, reverse: bool = False) -> Iterator[K]:
     """
-    Return a dynamic view of the keys stored in the HashMap.
+    Return an iterator over the keys stored in the HashMap.
 
-    The returned view reflects changes made to the HashMap after the view
-    has been created. Keys are exposed in the current iteration order of
-    the HashMap.
+    Keys are yielded according to the current iteration order of the
+    HashMap. When ``reverse`` is ``True``, keys are yielded in reverse
+    iteration order.
 
-    The returned object does not contain copies of the keys.
+    The returned iterator is single-use and does not contain copies of
+    the stored keys.
+
+    Args:
+      reverse: Whether to iterate over the keys in reverse order.
+        Defaults to ``False``.
 
     Returns:
-      A dynamic view containing the keys stored in the HashMap.
+      An iterator over the keys stored in the HashMap.
 
     Examples:
-      Retrieve the keys of a HashMap:
+      Iterate over keys in their current order:
 
       >>> hashmap = HashMap.from_dict({
       ...   "a": 1,
       ...   "b": 2,
+      ...   "c": 3,
       ... })
-      >>> keys = hashmap.get_keys()
-      >>> list(keys)
-      ['a', 'b']
-
-      The view reflects subsequent changes to the HashMap:
-
-      >>> hashmap.insert("c", 3)
-      >>> list(keys)
+      >>> list(hashmap.get_keys())
       ['a', 'b', 'c']
+
+      Iterate over keys in reverse order:
+
+      >>> list(hashmap.get_keys(reverse=True))
+      ['c', 'b', 'a']
+
+      The returned iterator is consumed as it is traversed:
+
+      >>> keys = hashmap.get_keys()
+      >>> next(keys)
+      'a'
+      >>> list(keys)
+      ['b', 'c']
     """
     ...
 
   @abstractmethod
-  def get_values(self) -> ValuesView[V]:
+  def get_values(self, reverse: bool = False) -> Iterator[V]:
     """
-    Return a dynamic view of the values stored in the HashMap.
+    Return an iterator over the values stored in the HashMap.
 
-    The returned view reflects changes made to the HashMap after the view
-    has been created. Values are exposed in the current iteration order of
-    the HashMap.
+    Values are yielded according to the current iteration order of the
+    HashMap. When ``reverse`` is ``True``, values are yielded in reverse
+    iteration order.
 
-    Stored values are returned by reference and are not deeply copied.
-    Mutable objects accessed through the view therefore refer to the same
-    objects stored in the HashMap.
+    Stored values are yielded by reference and are not deeply copied.
+    Mutable values obtained through the iterator therefore refer to the
+    same objects stored in the HashMap.
+
+    The returned iterator is single-use.
+
+    Args:
+      reverse: Whether to iterate over the values in reverse order.
+        Defaults to ``False``.
 
     Returns:
-      A dynamic view containing the values stored in the HashMap.
+      An iterator over the values stored in the HashMap.
 
     Examples:
-      Retrieve the values of a HashMap:
+      Iterate over values in their current order:
 
       >>> hashmap = HashMap.from_dict({
-      ...   "a": 1,
-      ...   "b": 2,
+      ...   "a": 10,
+      ...   "b": 20,
+      ...   "c": 30,
       ... })
-      >>> values = hashmap.get_values()
-      >>> list(values)
-      [1, 2]
+      >>> list(hashmap.get_values())
+      [10, 20, 30]
 
-      The view reflects subsequent changes to the HashMap:
+      Iterate over values in reverse order:
 
-      >>> hashmap.update("a", 10)
-      >>> list(values)
-      [10, 2]
+      >>> list(hashmap.get_values(reverse=True))
+      [30, 20, 10]
 
-      Mutable values are exposed by reference:
+      Mutable values are yielded by reference:
 
       >>> hashmap = HashMap.from_dict({
       ...   "items": [1, 2],
       ... })
       >>> values = hashmap.get_values()
-      >>> next(iter(values)).append(3)
-      >>> hashmap.get("items")
-      [1, 2, 3]
-    """
-    ...
-
-  @abstractmethod
-  def get_entries(self) -> ItemsView[K, V]:
-    """
-    Return a dynamic view of the entries stored in the HashMap.
-
-    Each entry is exposed as a ``(key, value)`` tuple. Entries are
-    returned in the current iteration order of the HashMap.
-
-    The returned view reflects changes made to the HashMap after the view
-    has been created.
-
-    Keys and values contained in the entries are not deeply copied.
-    Mutable values therefore refer to the same objects stored in the
-    HashMap.
-
-    Returns:
-      A dynamic view containing the HashMap's key-value pairs.
-
-    Examples:
-      Retrieve the entries of a HashMap:
-
-      >>> hashmap = HashMap.from_dict({
-      ...   "a": 1,
-      ...   "b": 2,
-      ... })
-      >>> entries = hashmap.get_entries()
-      >>> list(entries)
-      [('a', 1), ('b', 2)]
-
-      The view reflects subsequent changes to the HashMap:
-
-      >>> hashmap.insert("c", 3)
-      >>> list(entries)
-      [('a', 1), ('b', 2), ('c', 3)]
-
-      Mutable values are exposed by reference:
-
-      >>> hashmap = HashMap.from_dict({
-      ...   "items": [1, 2],
-      ... })
-      >>> entries = hashmap.get_entries()
-      >>> key, value = next(iter(entries))
+      >>> value = next(values)
       >>> value.append(3)
       >>> hashmap.get("items")
       [1, 2, 3]
     """
     ...
 
+  @abstractmethod
+  def get_entries(
+    self,
+    reverse: bool = False,
+  ) -> Iterator[tuple[K, V]]:
+    """
+    Return an iterator over the entries stored in the HashMap.
+
+    Each entry is yielded as a ``(key, value)`` tuple according to the
+    current iteration order of the HashMap. When ``reverse`` is ``True``,
+    entries are yielded in reverse iteration order.
+
+    Keys and values contained in the yielded tuples are not deeply
+    copied. Mutable values therefore refer to the same objects stored in
+    the HashMap.
+
+    The returned iterator is single-use.
+
+    Args:
+      reverse: Whether to iterate over the entries in reverse order.
+        Defaults to ``False``.
+
+    Returns:
+      An iterator yielding ``(key, value)`` tuples from the HashMap.
+
+    Examples:
+      Iterate over entries in their current order:
+
+      >>> hashmap = HashMap.from_dict({
+      ...   "a": 1,
+      ...   "b": 2,
+      ...   "c": 3,
+      ... })
+      >>> list(hashmap.get_entries())
+      [('a', 1), ('b', 2), ('c', 3)]
+
+      Iterate over entries in reverse order:
+
+      >>> list(hashmap.get_entries(reverse=True))
+      [('c', 3), ('b', 2), ('a', 1)]
+
+      Mutable values are yielded by reference:
+
+      >>> hashmap = HashMap.from_dict({
+      ...   "items": [1, 2],
+      ... })
+      >>> entries = hashmap.get_entries()
+      >>> key, value = next(entries)
+      >>> value.append(3)
+      >>> hashmap.get("items")
+      [1, 2, 3]
+    """
+    ...
+  
   @abstractmethod
   def size(self) -> int:
     """
@@ -592,7 +620,8 @@ class HashMapInterface[K, V](ABC):
       value: The value to associate with the key.
 
     Raises:
-      KeyError: If the key already exists.
+      KeyError: If the key is None or if it already exists.
+      ValueError: If the value is None.
       TypeError: If the key is not hashable.
 
     Examples:
@@ -633,7 +662,8 @@ class HashMapInterface[K, V](ABC):
       value: The new value to associate with the key.
 
     Raises:
-      KeyError: If the key does not exist.
+      KeyError: If the key does not exist or the given key is None.
+      ValueError: If the value is None.
 
     Examples:
       Update an existing entry:
@@ -681,7 +711,8 @@ class HashMapInterface[K, V](ABC):
         new value and returns the value that should be stored.
 
     Raises:
-      KeyError: If the key does not exist.
+      KeyError: If the key does not exist or if the given key is None.
+      ValueError: if the given value is None, or if the callback returns None.
 
     Examples:
       Update a value using both its current and supplied values:
@@ -724,6 +755,8 @@ class HashMapInterface[K, V](ABC):
       value: The value to store.
 
     Raises:
+      KeyError: If the given key is None.
+      ValueError: if the given value is None.
       TypeError: If a newly inserted key is not hashable.
 
     Examples:
@@ -768,6 +801,8 @@ class HashMapInterface[K, V](ABC):
         when the key is absent, followed by the supplied new value.
 
     Raises:
+      KeyError: If the key does not exist or if the given key is None.
+      ValueError: if the given value is None, or if the callback returns None.
       TypeError: If a newly inserted key is not hashable.
 
     Examples:
@@ -806,7 +841,7 @@ class HashMapInterface[K, V](ABC):
       key: The key of the entry to remove.
 
     Raises:
-      KeyError: If the key does not exist.
+      KeyError: If the key does not exist or if the given key is None.
 
     Examples:
       Delete an existing entry:
