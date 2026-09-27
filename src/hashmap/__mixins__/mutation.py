@@ -63,6 +63,10 @@ class Mutation[K, V](HashMapInterface[K, V]):
 
     raise ValueError("No entry in the map matches the given rule.")
 
+  def pop(self, key: K, default: V | None = None) -> V | None:
+    self._assert_key_not_none(key)
+    return self._map.pop(key, default)
+
   def pop_first(self, rule: Rule[K, V], direction: Direction = "left", default: tuple[K, V] | None = None) -> tuple[K, V] | None:
     for key, value in self.get_entries(direction == 'right'):
       if rule(key, value):
