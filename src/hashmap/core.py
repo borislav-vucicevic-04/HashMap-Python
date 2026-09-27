@@ -2,6 +2,7 @@ from .__types__ import *
 from .__mixins__ import *
 
 class HashMap[K, V](
+  Mutation[K, V],
   Factories[K, V],
   Lookup[K, V],
   HashMapInterface[K, V]

@@ -978,6 +978,7 @@ class HashMapInterface[K, V](ABC):
     self,
     rule: Rule[K, V],
     direction: Direction = "left",
+    default: tuple[K, V] | None = None
   ) -> tuple[K, V] | None:
     """
     Remove and return the first entry that satisfies a given rule.
@@ -988,7 +989,7 @@ class HashMapInterface[K, V](ABC):
     searches from the end.
 
     If a matching entry is found, it is removed and returned as a
-    ``(key, value)`` tuple. If no entry matches, ``None`` is returned.
+    ``(key, value)`` tuple. If no entry matches, ``default`` is returned.
 
     Exceptions raised by the rule are propagated to the caller.
 
@@ -997,10 +998,11 @@ class HashMapInterface[K, V](ABC):
         returns ``True`` when the entry matches.
       direction: The direction from which the search begins. Must be
         ``"left"`` or ``"right"``. Defaults to ``"left"``.
+      default: The value to return if not matching pair is found. Defaults to ``None``
 
     Returns:
       The first matching key-value pair as a ``(key, value)`` tuple, or
-      ``None`` if no entry satisfies the rule.
+      ``default`` if no entry satisfies the rule.
 
     Examples:
       Remove the first matching entry from the left:
@@ -1068,6 +1070,8 @@ class HashMapInterface[K, V](ABC):
         ``"descending"``. Defaults to ``"ascending"``.
 
     Raises:
+      ValueError: if the value of `by` argument is neither `"key"` nor `"value"`
+      ValueError: if the value of `order` argument is neither `"ascending"` nor `"descending"`
       TypeError: If the selected keys or values cannot be ordered with
         one another.
 
