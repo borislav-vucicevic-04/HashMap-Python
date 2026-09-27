@@ -1301,6 +1301,7 @@ class HashMapInterface[K, V](ABC):
     Raises:
       KeyError: If any key from ``other`` already exists in the current
         HashMap.
+      ValueError: If the callback returns ``None``.
       TypeError: If any inserted key is not hashable.
 
     Examples:
@@ -1370,6 +1371,7 @@ class HashMapInterface[K, V](ABC):
     Raises:
       KeyError: If any key from ``other`` does not exist in the current
         HashMap.
+      ValueError: If the callback returns ``None``.
 
     Examples:
       Combine current and incoming values:
@@ -1436,6 +1438,7 @@ class HashMapInterface[K, V](ABC):
 
     Raises:
       TypeError: If a newly inserted key is not hashable.
+      ValueError: If the callback returns ``None``.
 
     Examples:
       Merge values using existing values when available:
