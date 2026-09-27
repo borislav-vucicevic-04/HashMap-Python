@@ -8,3 +8,13 @@ def make_hashmap[K, V](
   )
 
   return hashmap
+
+class EqualityValue:
+  def __init__(self, value: int) -> None:
+    self.value = value
+
+  def __eq__(self, other: object) -> bool:
+    if not isinstance(other, EqualityValue):
+      return False
+
+    return self.value == other.value
